@@ -1,0 +1,173 @@
+
+# deployment-v1.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v1
+  namespace: task3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v1
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.19
+          ports:
+           - containerPort: 80
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-config-v1
+---
+# deployment-v2.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-v2
+  namespace: task3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.20
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-config-v2
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-v1
+  namespace: task3
+
+data:
+  index.html: |
+    <html>
+    <body>
+    <pre>
+      V1 Nginx-1.19
+      --------
+         \   ^__^
+          \  (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||
+    </pre>
+    </html>
+    </body>
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-v2
+  namespace: task3
+data:
+  index.html: |
+    <html>
+    <body>
+    <pre>
+      V2 Nginx-1.20
+      --------
+         \   ^__^
+          \  (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||
+    </pre>
+    </html>
+    </body>
+---
+
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "50" # % трафика 
+
+
+spec:
+  rules:
+  - host: suntsovvv.tplinkdns.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-v1-service
+            port:
+              number: 80
+      - path: /v2
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-v2-service
+            port:
+              number: 80
+---
+
+# nginx-v1-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-v1-service
+  namespace: task3
+spec:
+  selector:
+    app: nginx
+    version: v1
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  externalIPs:
+   - 192.168.0.105
+---
+# nginx-v2-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-v2-service
+  namespace: task3
+spec:
+  selector:
+    app: nginx
+    version: v2
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  externalIPs:
+   - 192.168.0.105
+
+---
