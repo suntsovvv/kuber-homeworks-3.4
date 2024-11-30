@@ -4,17 +4,6 @@
 
 Выбрать и настроить стратегию обновления приложения.
 
-### Чеклист готовности к домашнему заданию
-
-1. Кластер K8s.
-
-### Инструменты и дополнительные материалы, которые пригодятся для выполнения задания
-
-1. [Документация Updating a Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#updating-a-deployment).
-2. [Статья про стратегии обновлений](https://habr.com/ru/companies/flant/articles/471620/).
-
------
-
 ### Задание 1. Выбрать стратегию обновления приложения и описать ваш выбор
 
 1. Имеется приложение, состоящее из нескольких реплик, которое требуется обновить.
@@ -291,7 +280,7 @@ user@microk8s:~/kuber-homeworks-3.4$ kubectl describe deployments.apps app-task2
     Image:        nginx:1.20
     Image:      wbitt/network-multitool
 ```
-```````````
+-------
  
 
  
@@ -482,13 +471,30 @@ spec:
 
 ---
 ```
-Проверил результат
+Проверил результат:
+```bash
+user@microk8s:~/kuber-homeworks-3.4$ kubectl get all -n task3
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/nginx-v1-85bcdcfcd5-55htj   1/1     Running   0          3h55m
+pod/nginx-v2-587448594d-2cwvf   1/1     Running   0          3h55m
 
+NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP     PORT(S)   AGE
+service/nginx-v1-service   ClusterIP   10.152.183.56    192.168.0.105   80/TCP    3h55m
+service/nginx-v2-service   ClusterIP   10.152.183.164   192.168.0.105   80/TCP    3h55m
 
------
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-v1   1/1     1            1           3h55m
+deployment.apps/nginx-v2   1/1     1            1           3h55m
+
+NAME                                  DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-v1-85bcdcfcd5   1         1         1       3h55m
+replicaset.apps/nginx-v2-587448594d   1         1         1       3h55m
+
+```
 
 При проверке не мог поймать смену версий , всегда попадал на одну и ту же. Но когда попробоал подключаться с разных машин, получил результат:   
 
+![image](https://github.com/user-attachments/assets/826b5117-1f4f-4422-b23c-13dd123de803)
 
 
 
